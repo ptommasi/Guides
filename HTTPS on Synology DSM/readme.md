@@ -6,6 +6,8 @@ The process is fairly straightforward, but there are a couple of pitfalls here &
 
 In this guide we are not going to configure an ACME server or anything like that, but rather an offline container which just signs URLs. If the container dies, HTTPS will still work. If the NAS gets disconnected, HTTPS will still work. It's just the simplest, so we are not leveraging the full capabilities of the Certificate Authority, but just going for a basic configuration.
 
+As a bonus step, there is also a final note on how to configure https on your SRM 1.2.x too (e.g. Synology rt2600ac). Be aware that the next SRM (1.3, the one rt6600ax is based on) might be different (and actually more flexible).
+
 Before starting
 ---------------
 This guide need you to have basic proficiency in a couple of areas:
@@ -27,7 +29,7 @@ This is the overview of the steps:
  4) Import the certificates in DSM and **update the 'system default' item under settings**
  5) Install `root_ca.crt` on all the devices in your network
  6) Profit!
-
+ 7) Bonus step: https on SRM 1.2.5
 
 Step 1 - Bootstrap your `step-ca` container
 -------------------------------------------
@@ -162,3 +164,27 @@ Here it goes, you should have the beloved lock in your browser now!
 ![alt text](images/profit.png)
 
 As well, quickconnect should also be still working using Let's Encrypt certificates (or whatever you configured).
+
+
+Step 7 - Configure SRM for https
+--------------------------------
+
+SRM 1.2.5 is a bit more basic compared to DSM in term of flexibility: it doesn't allow multiple certificates and it doesn't support ECC (but rather RSA).
+
+Enter your step-ca container, and this is the command adapted to generate RSA certificates:
+```
+step ca certificate "router.lan" router.crt router.key --ca-url https://localhost:9000 --root /home/step/certs/root_ca.crt --not-after 8766h --kty RSA
+```
+
+I won't go in the single steps, it's just the exact same from above, except for the added parameter **--kty RSA**.
+
+In the control panel, the certificate tab is under Services:
+![alt text](images/srm-add-certificate-1.png)
+
+Import a certificate and fill as you did previously:
+![alt text](images/srm-add-certificate-2.png)
+
+The login page is under System -> SRM settings, change settings to your will:
+![alt text](images/srm-ui-redirect.png)
+
+Note: quickconnect will keep working as intented, but **I'm not sure about DDNS**, since I don't really use it anymore.
